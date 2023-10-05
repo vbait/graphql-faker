@@ -1,17 +1,16 @@
 {
   "name": "graphql-faker",
-  "version": "2.0.0",
+  "version": "0.0.1",
   "description": "Mock or extend your GraphQL API with faked data. No coding required",
-  "author": "IvanGoncharov <ivan.goncharov.ua@gmail.com>",
+  "author": "Vitalii Baitaliuk <flampschelsea@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/graphql-kit/graphql-faker#readme",
+  "homepage": "https://github.com/vbait/graphql-faker#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/graphql-kit/graphql-faker.git"
+    "url": "git+https://github.com/vbait/graphql-faker.git"
   },
-  "funding": "https://github.com/graphql-kit/graphql-faker?sponsor=1",
   "bugs": {
-    "url": "https://github.com/graphql-kit/graphql-faker/issues"
+    "url": "https://github.com/vbait/graphql-faker/issues"
   },
   "main": "dist/index.js",
   "bin": {
