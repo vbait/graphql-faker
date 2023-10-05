@@ -2,15 +2,10 @@
 
 # GraphQL Faker
 
-[![Build Status](https://github.com/graphql-kit/graphql-faker/workflows/CI/badge.svg?branch=master)](https://github.com/graphql-kit/graphql-faker/actions?query=branch%3Amaster)
-[![npm](https://img.shields.io/npm/v/graphql-faker.svg)](https://www.npmjs.com/package/graphql-faker)
-[![David](https://img.shields.io/david/graphql-kit/graphql-faker.svg)](https://david-dm.org/graphql-kit/graphql-faker)
-[![David](https://img.shields.io/david/dev/graphql-kit/graphql-faker.svg)](https://david-dm.org/graphql-kit/graphql-faker?type=dev)
 [![npm](https://img.shields.io/npm/l/graphql-faker.svg)](https://github.com/graphql-kit/graphql-faker/blob/master/LICENSE)
-[![docker](https://img.shields.io/docker/build/apisguru/graphql-faker.svg)](https://hub.docker.com/r/apisguru/graphql-faker/)
 
 Mock your future API or extend the existing API with realistic data from [faker.js](https://fakerjs.dev/). **No coding required**.
-All you need is to write [GraphQL SDL](https://alligator.io/graphql/graphql-sdl/). Don't worry, we will provide you with examples in our SDL editor.
+All you need is to write [GraphQL SDL](https://alligator.io/graphql/graphql-sdl/).
 
 In the GIF below we add fields to types inside real GitHub API and you can make queries from GraphiQL, Apollo, Relay, etc. and receive **real data mixed with mock data.**
 ![demo-gif](./docs/demo.gif)
@@ -32,7 +27,6 @@ No need to remember or read any docs. Autocompletion is included!
 - 60+ different types of faked data e.g. `streetAddress`, `firstName`, `lastName`, `imageUrl`, `lorem`, `semver`
 - Comes with multiple locales supported
 - Runs as a local server (can be called from browser, cURL, your app, etc.)
-- Interactive editor with autocompletion for directives with GraphiQL embedded
 - ✨ Support for proxying existing GraphQL API and extending it with faked data
   ![Extend mode diagram](./docs/extend-mode.gif)
 
@@ -43,12 +37,6 @@ No need to remember or read any docs. Autocompletion is included!
 or run it in a Docker container, see **Usage with Docker**
 
 ## TL;DR
-
-Mock GraphQL API based on example SDL and open interactive editor:
-
-    graphql-faker --open
-
-**Note:** You can specify non-existing SDL file names - Faker will use example SDL which you can edit in interactive editor.
 
 Extend real data from SWAPI with faked data based on extension SDL:
 
@@ -69,7 +57,6 @@ Extend real data from GitHub API with faked data based on extension SDL (you can
 
 - `-p`, `--port` HTTP Port [default: `env.PORT` or `9002`]
 - `-e`, `--extend` URL to existing GraphQL server to extend
-- `-o`, `--open` Open page with SDL editor and GraphiQL in browser
 - `-H`, `--header` Specify headers to the proxied server in cURL format, e.g.: `Authorization: bearer XXXXXXXXX`
 - `--forward-headers` Specify which headers should be forwarded to the proxied server
 - `--co`, `--cors-origin` CORS: Specify the custom origin for the Access-Control-Allow-Origin header, by default it is the same as `Origin` header from the request

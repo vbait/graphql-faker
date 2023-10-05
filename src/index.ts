@@ -7,8 +7,6 @@ import * as express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import * as fs from 'fs';
 import { printSchema, Source } from 'graphql';
-import { express as voyagerMiddleware } from 'graphql-voyager/middleware';
-import * as open from 'open';
 import * as path from 'path';
 
 import { parseCLI } from './cli';
@@ -69,7 +67,7 @@ function runServer(
   remoteSDL?: Source,
   customExecuteFn?,
 ) {
-  const { port, openEditor } = options;
+  const { port } = options;
   const corsOptions = {
     credentials: true,
     origin: options.corsOrigin,
@@ -131,18 +129,6 @@ function runServer(
     }
   });
 
-  app.use('/editor', express.static(path.join(__dirname, 'editor')));
-  app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
-  app.use(
-    '/voyager.worker.js',
-    express.static(
-      path.join(
-        __dirname,
-        '../node_modules/graphql-voyager/dist/voyager.worker.js',
-      ),
-    ),
-  );
-
   const server = app.listen(port);
 
   const shutdown = () => {
@@ -156,15 +142,9 @@ function runServer(
   log(`\n${chalk.green('✔')} Your GraphQL Fake API is ready to use 🚀
   Here are your links:
 
-  ${chalk.blue('❯')} Interactive Editor: http://localhost:${port}/editor
   ${chalk.blue('❯')} GraphQL API:        http://localhost:${port}/graphql
-  ${chalk.blue('❯')} GraphQL Voyager:    http://localhost:${port}/voyager
 
   `);
-
-  if (openEditor) {
-    setTimeout(() => open(`http://localhost:${port}/editor`), 500);
-  }
 }
 
 function prettyPrintValidationErrors(validationErrors: ValidationErrors) {

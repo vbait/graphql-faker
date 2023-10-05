@@ -7,7 +7,6 @@ interface Options {
   fileName: string;
   port: number;
   corsOrigin: string | true;
-  openEditor: boolean;
   extendURL: string | undefined;
   headers: { [key: string]: string };
   forwardHeaders: ReadonlyArray<string>;
@@ -58,7 +57,6 @@ export function parseCLI(): Options {
     fileName,
     port: parsePortNumber(values.port),
     corsOrigin: values['cors-origin'] ?? values.co ?? true,
-    openEditor: values.open,
     extendURL: values.extend,
     headers: Object.fromEntries(values.header.map(parseHeader)),
     forwardHeaders: values['forward-headers'].map((str) => str.toLowerCase()),
@@ -91,8 +89,6 @@ export function parseCLI(): Options {
       --version            Show version number                             [boolean]
       -h, --help           Show help                                       [boolean]
       --port, -p           HTTP Port                        [number] [default: 9002]
-      --open, -o           Open page with SDL editor and GraphiQL in browser
-                                                                           [boolean]
       --cors-origin, --co  CORS: Specify the custom origin for the
                            Access-Control-Allow-Origin header, by default it is the
                            same as \`Origin\` header from the request
@@ -104,9 +100,6 @@ export function parseCLI(): Options {
                            server                                            [array]
 
     Examples:
-
-    # Mock GraphQL API based on example SDL and open interactive editor
-    ${execName} --open
 
     # Extend real data from SWAPI with faked data based on extension SDL
     ${execName} ./ext-swapi.graphql --extend http://swapi.apis.guru/

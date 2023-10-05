@@ -28,7 +28,7 @@ overrides:
     parser: '@typescript-eslint/parser'
     parserOptions:
       sourceType: module
-      project: ['tsconfig.json', 'src/editor/tsconfig.json']
+      project: ['tsconfig.json']
     plugins: ['@typescript-eslint']
     extends:
       - 'plugin:import/typescript'
