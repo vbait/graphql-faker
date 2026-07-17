@@ -1,4 +1,4 @@
-import * as assert from 'assert';
+import assert from 'assert';
 import {
   defaultFieldResolver,
   defaultTypeResolver,
@@ -20,7 +20,7 @@ import {
   getRandomInt,
   getRandomItem,
   stdScalarFakers,
-} from './fake';
+} from './fake.js';
 
 interface FakeArgs {
   type: string;
@@ -57,7 +57,7 @@ export const fakeTypeResolver: GraphQLTypeResolver<unknown, unknown> = async (
   }
 
   const possibleTypes = info.schema.getPossibleTypes(abstractType);
-  return getRandomItem(possibleTypes);
+  return getRandomItem(possibleTypes).name;
 };
 
 export const fakeFieldResolver: GraphQLFieldResolver<unknown, unknown> = async (
@@ -90,7 +90,7 @@ export const fakeFieldResolver: GraphQLFieldResolver<unknown, unknown> = async (
       ...(Object.keys(args).length === 1 && isPlainObject(inputArg)
         ? inputArg
         : args),
-      ...resolved,
+      ...(resolved as object),
     };
   }
 

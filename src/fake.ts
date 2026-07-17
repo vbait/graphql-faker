@@ -1,5 +1,55 @@
 import { allFakers, faker } from '@faker-js/faker';
-import * as moment from 'moment';
+
+// Matches an escaped literal ([...], emitted verbatim without the brackets)
+// or one of the supported moment-style date tokens.
+const DATE_TOKENS = /\[([^\]]*)]|YYYY|YY|MM|M|DD|D|HH|H|mm|m|ss|s/g;
+
+function pad(value: number): string {
+  return value < 10 ? '0' + value : String(value);
+}
+
+// Formats a Date using the moment-style tokens documented for the `date`
+// fake types (YYYY, MM, DD, HH, mm, ss, ...). Text wrapped in `[]` is emitted
+// literally. When no format is given the ISO-8601 representation is returned,
+// matching the previous `moment` default.
+function formatDate(date: Date, format?: string): string {
+  if (format == null) {
+    return date.toISOString();
+  }
+  return format.replace(DATE_TOKENS, (token, escaped?: string) => {
+    if (escaped !== undefined) {
+      return escaped;
+    }
+    switch (token) {
+      case 'YYYY':
+        return String(date.getFullYear());
+      case 'YY':
+        return pad(date.getFullYear() % 100);
+      case 'MM':
+        return pad(date.getMonth() + 1);
+      case 'M':
+        return String(date.getMonth() + 1);
+      case 'DD':
+        return pad(date.getDate());
+      case 'D':
+        return String(date.getDate());
+      case 'HH':
+        return pad(date.getHours());
+      case 'H':
+        return String(date.getHours());
+      case 'mm':
+        return pad(date.getMinutes());
+      case 'm':
+        return String(date.getMinutes());
+      case 'ss':
+        return pad(date.getSeconds());
+      case 's':
+        return String(date.getSeconds());
+      default:
+        return token;
+    }
+  });
+}
 
 export function getRandomInt(min: number, max: number) {
   return faker.number.int({ min, max });
@@ -11,7 +61,7 @@ export function getRandomItem<T>(array: ReadonlyArray<T>): T {
 
 export const stdScalarFakers = {
   Int: () => faker.number.int({ min: 0, max: 99999 }),
-  Float: () => faker.number.float({ min: 0, max: 99999, precision: 0.01 }),
+  Float: () => faker.number.float({ min: 0, max: 99999, multipleOf: 0.01 }),
   String: () => 'string',
   Boolean: () => faker.datatype.boolean(),
   ID: () => toBase64(faker.number.int({ max: 9999999999 }).toString()),
@@ -22,7 +72,6 @@ function toBase64(str: string) {
 }
 
 function fakeFunctions(fakerInstance: typeof faker) {
-  allFakers;
   return {
     // Address section
     zipCode: () => fakerInstance.location.zipCode(),
@@ -81,24 +130,22 @@ function fakeFunctions(fakerInstance: typeof faker) {
     date: {
       args: ['dateFormat', 'dateFrom', 'dateTo'],
       func: (dateFormat, dateFrom, dateTo) =>
-        moment(fakerInstance.date.between({ from: dateFrom, to: dateTo }))
-          .format(dateFormat)
-          .toString(),
+        formatDate(
+          fakerInstance.date.between({ from: dateFrom, to: dateTo }),
+          dateFormat,
+        ),
     },
     pastDate: {
       args: ['dateFormat'],
-      func: (dateFormat) =>
-        moment(fakerInstance.date.past()).format(dateFormat),
+      func: (dateFormat) => formatDate(fakerInstance.date.past(), dateFormat),
     },
     futureDate: {
       args: ['dateFormat'],
-      func: (dateFormat) =>
-        moment(fakerInstance.date.future()).format(dateFormat),
+      func: (dateFormat) => formatDate(fakerInstance.date.future(), dateFormat),
     },
     recentDate: {
       args: ['dateFormat'],
-      func: (dateFormat) =>
-        moment(fakerInstance.date.recent()).format(dateFormat),
+      func: (dateFormat) => formatDate(fakerInstance.date.recent(), dateFormat),
     },
 
     // Finance section
@@ -139,7 +186,7 @@ function fakeFunctions(fakerInstance: typeof faker) {
     },
 
     // Internet section
-    avatarUrl: () => fakerInstance.internet.avatar(),
+    avatarUrl: () => fakerInstance.image.avatar(),
     email: {
       args: ['emailProvider'],
       func: (provider) => fakerInstance.internet.email({ provider }),
@@ -151,8 +198,18 @@ function fakeFunctions(fakerInstance: typeof faker) {
     userAgent: () => fakerInstance.internet.userAgent(),
     colorHex: {
       args: ['baseColor'],
-      func: ({ redBase, greenBase, blueBase }) => {
-        return fakerInstance.internet.color({ redBase, greenBase, blueBase });
+      // Mix a random value with the requested base per channel (average),
+      // matching the documented technique. `red255/green255/blue255` default
+      // to 0 -> a fully random (dark-biased) color.
+      func: (baseColor) => {
+        const { red255 = 0, green255 = 0, blue255 = 0 } = baseColor ?? {};
+        const channel = (base: number) => {
+          const value = Math.floor(
+            (fakerInstance.number.int({ min: 0, max: 255 }) + base) / 2,
+          );
+          return value.toString(16).padStart(2, '0');
+        };
+        return '#' + channel(red255) + channel(green255) + channel(blue255);
       },
     },
     macAddress: () => fakerInstance.internet.mac(),
@@ -181,8 +238,19 @@ function fakeFunctions(fakerInstance: typeof faker) {
     // Random section
     number: {
       args: ['minNumber', 'maxNumber', 'precisionNumber'],
-      func: (min, max, precision) =>
-        fakerInstance.number.float({ min, max, precision }),
+      func: (min, max, precision) => {
+        try {
+          return fakerInstance.number.float({
+            min,
+            max,
+            multipleOf: precision,
+          });
+        } catch {
+          // `multipleOf` throws when no multiple fits [min, max]; the old
+          // `precision` option never did, so fall back to an unrounded value.
+          return fakerInstance.number.float({ min, max });
+        }
+      },
     },
     uuid: () => fakerInstance.string.uuid(),
     word: () => fakerInstance.lorem.word(),

@@ -18,6 +18,7 @@ overrides:
       - docker
 
 words:
+  - vbait
   - positionals
   - DDTHH
   - SFNS

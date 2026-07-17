@@ -15,7 +15,7 @@ import {
   ValuesOfCorrectTypeRule,
 } from 'graphql';
 // FIXME
-import { validateSDL } from 'graphql/validation/validate';
+import { validateSDL } from 'graphql/validation/validate.js';
 
 const fakeDefinitionAST = parse(/* GraphQL */ `
   enum fake__Locale {
@@ -158,7 +158,7 @@ const fakeDefinitionAST = parse(/* GraphQL */ `
     passwordLength: Int
     "Only for type \`lorem\`"
     loremSize: fake__loremSize
-    "Only for types \`*Date\`. Example value: \`YYYY MM DD\`. [Full Specification](http://momentjs.com/docs/#/displaying/format/)"
+    "Only for types \`*Date\`. Example value: \`YYYY MM DD\`. Supported tokens: YYYY, YY, MM, M, DD, D, HH, H, mm, m, ss, s. Wrap literal text in \`[]\`."
     dateFormat: String = "YYYY-MM-DDTHH:mm:ss[Z]"
     "Only for types \`betweenDate\`. Example value: \`1986-11-02\`."
     dateFrom: String = "2010-01-01"
@@ -272,7 +272,6 @@ export function buildWithFakeDefinitions(
 
     return extendSchema(schema, extensionAST, {
       assumeValid: true,
-      commentDescriptions: true,
     });
   }
 }
@@ -305,8 +304,5 @@ function getDefaultRootTypes(schema) {
 }
 
 function parseSDL(sdl: Source) {
-  return parse(sdl, {
-    allowLegacySDLEmptyFields: true,
-    allowLegacySDLImplementsInterfaces: true,
-  });
+  return parse(sdl);
 }

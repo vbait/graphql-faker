@@ -5,8 +5,6 @@ import {
   GraphQLSchema,
   Source,
 } from 'graphql';
-import * as fetch from 'node-fetch';
-import { Headers } from 'node-fetch';
 
 export function existsSync(filePath: string): boolean {
   try {
@@ -56,7 +54,7 @@ export function graphqlRequest(
       variables,
     }),
   }).then((response) => {
-    if (response.ok) return response.json();
+    if (response.ok) return response.json() as Promise<any>;
     return response.text().then((body) => {
       throw Error(`${response.status} ${response.statusText}\n${body}`);
     });

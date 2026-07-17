@@ -1,21 +1,25 @@
 #!/usr/bin/env node
 
-import * as bodyParser from 'body-parser';
-import * as chalk from 'chalk';
-import * as cors from 'cors';
-import * as express from 'express';
-import { graphqlHTTP } from 'express-graphql';
+import chalk from 'chalk';
+import cors from 'cors';
+import express from 'express';
 import * as fs from 'fs';
-import { printSchema, Source } from 'graphql';
-import { express as voyagerMiddleware } from 'graphql-voyager/middleware';
-import * as open from 'open';
+import { execute, ExecutionArgs, printSchema, Source } from 'graphql';
+import { createHandler } from 'graphql-http/lib/use/express';
+import open from 'open';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
-import { parseCLI } from './cli';
-import { buildWithFakeDefinitions, ValidationErrors } from './fake_definition';
-import { fakeFieldResolver, fakeTypeResolver } from './fake_schema';
-import { getProxyExecuteFn } from './proxy';
-import { existsSync, getRemoteSchema, readSDL } from './utils';
+import { parseCLI } from './cli.js';
+import {
+  buildWithFakeDefinitions,
+  ValidationErrors,
+} from './fake_definition.js';
+import { fakeFieldResolver, fakeTypeResolver } from './fake_schema.js';
+import { getProxyExecuteFn } from './proxy.js';
+import { existsSync, getRemoteSchema, readSDL } from './utils.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const log = console.log;
 
@@ -67,7 +71,7 @@ function runServer(
   options,
   userSDL: Source,
   remoteSDL?: Source,
-  customExecuteFn?,
+  customExecuteFn?: (args: ExecutionArgs) => unknown,
 ) {
   const { port, openEditor } = options;
   const corsOptions = {
@@ -84,63 +88,38 @@ function runServer(
   } catch (error) {
     if (error instanceof ValidationErrors) {
       prettyPrintValidationErrors(error);
-      process.exit(1);
+    } else {
+      // e.g. a GraphQL syntax error from the SDL. Fail loud instead of
+      // starting the server with an undefined schema.
+      log(chalk.red(error instanceof Error ? error.message : String(error)));
     }
+    process.exit(1);
   }
 
-  app.options('/graphql', cors(corsOptions));
-  app.use(
-    '/graphql',
-    cors(corsOptions),
-    graphqlHTTP(() => ({
-      schema,
-      typeResolver: fakeTypeResolver,
-      fieldResolver: fakeFieldResolver,
-      customExecuteFn,
-      graphiql: { headerEditorEnabled: true },
-    })),
-  );
+  app.use('/graphql', cors(corsOptions));
 
-  app.get('/user-sdl', (_, res) => {
-    res.status(200).json({
-      userSDL: userSDL.body,
-      remoteSDL: remoteSDL?.body,
-    });
-  });
-
-  app.use('/user-sdl', bodyParser.text({ limit: '8mb' }));
-  app.post('/user-sdl', (req, res) => {
-    try {
-      const fileName = userSDL.name;
-      fs.writeFileSync(fileName, req.body);
-      userSDL = new Source(req.body, fileName);
-      schema = remoteSDL
-        ? buildWithFakeDefinitions(remoteSDL, userSDL)
-        : buildWithFakeDefinitions(userSDL);
-
-      const date = new Date().toLocaleString();
-      log(
-        `${chalk.green('✚')} schema saved to ${chalk.magenta(
-          fileName,
-        )} on ${date}`,
-      );
-
-      res.status(200).send('ok');
-    } catch (err) {
-      res.status(500).send(err.message);
+  // Serve the GraphiQL IDE for browser requests; forward everything else
+  // (API clients, GraphQL over GET) to the graphql-http handler below.
+  app.get('/graphql', (req, res, next) => {
+    if (req.accepts(['json', 'html']) === 'html') {
+      res.type('html').send(graphiqlHTML);
+    } else {
+      next();
     }
   });
 
-  app.use('/editor', express.static(path.join(__dirname, 'editor')));
-  app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
-  app.use(
-    '/voyager.worker.js',
-    express.static(
-      path.join(
-        __dirname,
-        '../node_modules/graphql-voyager/dist/voyager.worker.js',
-      ),
-    ),
+  app.all(
+    '/graphql',
+    createHandler({
+      schema,
+      context: (req) => req.raw as any,
+      execute: (args) =>
+        (customExecuteFn ?? execute)({
+          ...args,
+          fieldResolver: fakeFieldResolver,
+          typeResolver: fakeTypeResolver,
+        }),
+    }),
   );
 
   const server = app.listen(port);
@@ -156,16 +135,60 @@ function runServer(
   log(`\n${chalk.green('✔')} Your GraphQL Fake API is ready to use 🚀
   Here are your links:
 
-  ${chalk.blue('❯')} Interactive Editor: http://localhost:${port}/editor
-  ${chalk.blue('❯')} GraphQL API:        http://localhost:${port}/graphql
-  ${chalk.blue('❯')} GraphQL Voyager:    http://localhost:${port}/voyager
+  ${chalk.blue('❯')} GraphQL API:  http://localhost:${port}/graphql
+  ${chalk.blue('❯')} GraphiQL IDE: http://localhost:${port}/graphql
 
   `);
 
   if (openEditor) {
-    setTimeout(() => open(`http://localhost:${port}/editor`), 500);
+    setTimeout(() => open(`http://localhost:${port}/graphql`), 500);
   }
 }
+
+const graphiqlHTML = /* HTML */ `<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>GraphQL Faker — GraphiQL</title>
+      <style>
+        body {
+          margin: 0;
+        }
+        #graphiql {
+          height: 100vh;
+        }
+      </style>
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/graphiql@3/graphiql.min.css"
+      />
+    </head>
+    <body>
+      <div id="graphiql">Loading GraphiQL…</div>
+      <script
+        crossorigin
+        src="https://unpkg.com/react@18/umd/react.production.min.js"
+      ></script>
+      <script
+        crossorigin
+        src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+      ></script>
+      <script
+        crossorigin
+        src="https://unpkg.com/graphiql@3/graphiql.min.js"
+      ></script>
+      <script>
+        const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+        root.render(
+          React.createElement(GraphiQL, {
+            fetcher: GraphiQL.createFetcher({ url: '/graphql' }),
+            defaultEditorToolsVisibility: true,
+          }),
+        );
+      </script>
+    </body>
+  </html>`;
 
 function prettyPrintValidationErrors(validationErrors: ValidationErrors) {
   const { subErrors } = validationErrors;

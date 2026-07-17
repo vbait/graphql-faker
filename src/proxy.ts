@@ -12,7 +12,7 @@ import {
 } from 'graphql';
 import { IncomingMessage } from 'http';
 
-import { graphqlRequest } from './utils';
+import { graphqlRequest } from './utils.js';
 
 export function getProxyExecuteFn(url, headers, forwardHeaders) {
   //TODO: proxy extensions
@@ -50,15 +50,7 @@ function proxyResponse(response, args) {
 
   for (const error of response.errors || []) {
     const { message, path, extensions } = error;
-    const errorObj = new GraphQLError(
-      message,
-      undefined,
-      undefined,
-      undefined,
-      path,
-      undefined,
-      extensions,
-    );
+    const errorObj = new GraphQLError(message, { path, extensions });
 
     if (!path) {
       globalErrors.push(errorObj);

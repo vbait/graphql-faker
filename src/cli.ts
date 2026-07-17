@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 interface Options {
   fileName: string;
@@ -19,7 +19,7 @@ export function parseCLI(): Options {
 
   const { values, positionals } = parser();
 
-  if (values.help === false) {
+  if (values.help) {
     process.stderr.write(helpMessage());
     process.exit(0);
   }
@@ -91,8 +91,7 @@ export function parseCLI(): Options {
       --version            Show version number                             [boolean]
       -h, --help           Show help                                       [boolean]
       --port, -p           HTTP Port                        [number] [default: 9002]
-      --open, -o           Open page with SDL editor and GraphiQL in browser
-                                                                           [boolean]
+      --open, -o           Open GraphiQL IDE in browser                    [boolean]
       --cors-origin, --co  CORS: Specify the custom origin for the
                            Access-Control-Allow-Origin header, by default it is the
                            same as \`Origin\` header from the request

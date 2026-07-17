@@ -1,0 +1,36 @@
+# Example schema for manually testing the `vb-graphql-faker` CLI.
+#
+#   vb-graphql-faker examples/test.faker.graphql
+#
+# Then open http://localhost:9002/graphql (GraphiQL) or POST a query, e.g.:
+#
+#   curl -s -X POST http://localhost:9002/graphql \
+#     -H 'Content-Type: application/json' -H 'Accept: application/json' \
+#     -d '{"query":"{ me { fullName email createdAt } users { firstName } roll }"}'
+
+type Query {
+  me: User
+  users: [User] @listLength(min: 3, max: 5)
+  roll: Rarity
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  LEGENDARY
+}
+
+type User {
+  id: ID
+  firstName: String @fake(type: firstName)
+  lastName: String @fake(type: lastName)
+  fullName: String @fake(type: fullName)
+  email: String @fake(type: email)
+  avatar: String @fake(type: imageUrl)
+  balance: Float @fake(type: money)
+  # `date` type formatted with moment-style tokens (handled natively now)
+  createdAt: String @fake(type: pastDate, options: { dateFormat: "YYYY-MM-DD" })
+  # no format -> ISO-8601 default
+  lastSeen: String @fake(type: recentDate)
+  role: String @examples(values: ["admin", "member", "guest"])
+}
