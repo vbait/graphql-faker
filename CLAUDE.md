@@ -88,5 +88,5 @@ The pipeline is: **CLI args → build an augmented schema → serve it with faki
 - The `fake__Types` enum in `fake_definition.ts` and the function map in `fake.ts` must stay aligned — adding a fake type means editing both.
 - Imports must be sorted (`simple-import-sort` ESLint rule); run `npm run prettier` and `npm run lint` before finishing.
 - `.graphql` files are runtime assets, not compiled — they're copied into `dist/` by the `copy:graphql` script and read with `fs.readFileSync` at runtime relative to `__dirname`.
-- `graphql` is on **17**, but `graphql-http` (the only dep using graphql) declares `peer graphql "<=16"`. The combo is verified working (tsc + mock + proxy + CI), so `npm install` prints a peer **warning** and `npm ls` marks graphql `invalid` — this is expected, not an error. If graphql-http or graphql 17.x changes, re-verify. `express-graphql` was dropped (abandoned) in favor of `graphql-http`.
+- `graphql` is pinned to **16** because `graphql-http` (the only dep using graphql) peer-caps at `<=16`. `express-graphql` was dropped (abandoned) in favor of `graphql-http`.
 - Node `>= 22.13` required (`.node-version` = `22`).
