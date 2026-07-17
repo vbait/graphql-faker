@@ -29,6 +29,7 @@
     "debug": "tsx --inspect src/index.ts",
     "copy:graphql": "cp src/*.graphql dist/",
     "build": "rm -rf dist && tsc && npm run copy:graphql && chmod +x dist/index.js",
+    "prepublishOnly": "npm run build",
     "example": "npm run build && node dist/index.js examples/test.faker.graphql",
     "prettier": "prettier --cache --ignore-path .gitignore --write --list-different .",
     "prettier:check": "prettier --cache --ignore-path .gitignore --check .",
