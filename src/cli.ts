@@ -1,4 +1,6 @@
-import { basename } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import chalk from 'chalk';
@@ -18,6 +20,11 @@ export function parseCLI(): Options {
   const execName = basename(execPath);
 
   const { values, positionals } = parser();
+
+  if (values.version) {
+    process.stdout.write(`${packageVersion()}\n`);
+    process.exit(0);
+  }
 
   if (values.help) {
     process.stderr.write(helpMessage());
@@ -122,6 +129,9 @@ export function parseCLI(): Options {
         strict: true,
         allowPositionals: true,
         options: {
+          version: {
+            type: 'boolean',
+          },
           help: {
             short: 'h',
             type: 'boolean',
@@ -160,6 +170,14 @@ export function parseCLI(): Options {
     } catch (error) {
       reportError(error.message);
     }
+  }
+
+  function packageVersion(): string {
+    const dir = dirname(fileURLToPath(import.meta.url));
+    const pkg = JSON.parse(
+      readFileSync(join(dir, '..', 'package.json'), 'utf-8'),
+    );
+    return pkg.version;
   }
 
   function reportError(message: string): never {

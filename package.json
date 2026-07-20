@@ -1,6 +1,6 @@
 {
   "name": "@vbait/graphql-faker",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Mock or extend your GraphQL API with faked data. No coding required",
   "author": "Vitalii Baitaliuk <flampschelsea@gmail.com>",
   "license": "MIT",

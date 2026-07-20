@@ -65,6 +65,7 @@ Extend real data from GitHub API with faked data based on extension SDL (you can
 - `--forward-headers` Specify which headers should be forwarded to the proxied server
 - `--co`, `--cors-origin` CORS: Specify the custom origin for the Access-Control-Allow-Origin header, by default it is the same as `Origin` header from the request
 - `-h`, `--help` Show help
+- `--version` Show version number
 
 When specifying the `[SDL file]` after the `--forward-headers` option you need to prefix it with `--` to clarify it's not another header. For example:
 
